@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  /* 
+    Definimos el color principal de la marca 'junkdog'
+    Esto nos permite usar clases como text-brand, bg-brand, border-brand 
+  */
+  --color-brand: #619b59;
+}
+
+:root {
+  /* Configuraciones globales si fueran necesarias */
+}
