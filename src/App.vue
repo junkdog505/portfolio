@@ -16,7 +16,6 @@ const handleContactClick = () => {
 // Referencia para el contenedor de la sección de contenido
 const contentRef = useTemplateRef<HTMLDivElement>("contentRef");
 const contentElement = computed(() => contentRef.value);
-
 </script>
 
 <template>
@@ -86,9 +85,12 @@ const contentElement = computed(() => contentRef.value);
     Sección de Contenido (Scroll)
     Aparece debajo del Hero.
     min-h-screen asegura que al menos ocupe una pantalla de alto.
+    overflow-x-hidden: Previene scroll horizontal accidental.
   -->
-  <div ref="contentRef" class="relative min-h-screen w-full bg-neutral-900 p-8 text-brand">
-    
+  <div
+    ref="contentRef"
+    class="relative min-h-screen w-full  bg-neutral-900 p-8 text-brand flex"
+  >
     <!-- 
       Componente TargetCursor
       Maneja el cursor personalizado que reacciona a elementos con la clase 'cursor-target'.
@@ -97,29 +99,30 @@ const contentElement = computed(() => contentRef.value);
       v-if="contentElement": Asegura que el componente solo se monte cuando el contenedor exista,
                              evitando que tome el body por defecto y oculte el cursor globalmente.
     -->
-    <TargetCursor 
-        v-if="contentElement"
-        :spin-duration="2" 
-        :hide-default-cursor="true" 
-        :container-ref="contentElement" 
+    <TargetCursor
+      v-if="contentElement"
+      :spin-duration="2"
+      :hide-default-cursor="true"
+      :container-ref="contentElement"
     />
 
     <!-- 
       Contenedor Principal del Layout
-      - max-w-7xl: Limita el ancho máximo para pantallas grandes.
+      - max-w-full: Ocupa más espacio como se solicitó.
       - mx-auto: Centra el contenedor horizontalmente.
       - flex flex-col lg:flex-row: Diseño en columna para móvil, fila para escritorio (lg).
       - items-center: Centra verticalmente los elementos.
       - gap-12: Espaciado entre la tarjeta y el texto.
     -->
-    <div class="mx-auto flex max-w-7xl flex-col items-center justify-center gap-12 py-12 lg:flex-row lg:justify-between lg:py-24">
-      
+    <div
+      class="mx-auto flex max-w-[90rem] flex-col items-center justify-center gap-12 py-12 px-6 lg:flex-row lg:justify-between lg:py-24"
+    >
       <!-- 
         Columna Izquierda: ProfileCard
         - w-full lg:w-auto: Ancho completo en móvil, auto en escritorio.
         - flex justify-center: Centra la tarjeta.
       -->
-      <div class="flex w-full justify-center lg:w-1/2">
+      <div class="flex w-full justify-center">
         <ProfileCard
           name="Cristian Amezquita"
           title="Ingeniero de Sistemas"
@@ -141,8 +144,7 @@ const contentElement = computed(() => contentRef.value);
         - flex flex-col gap-6: Organiza el texto en columna con separación.
         - text-center lg:text-left: Texto centrado en móvil, alineado a la izquierda en escritorio.
       -->
-      <div class="flex w-full flex-col gap-6 text-center lg:w-1/2 lg:text-left">
-        
+      <div class="flex w-full flex-col gap-6 text-center lg:text-left">
         <!-- 
           Título
           - cursor-target: Clase para activar el efecto del TargetCursor.
@@ -151,17 +153,21 @@ const contentElement = computed(() => contentRef.value);
           - inline-block: Comportamiento de caja ajustada al texto.
         -->
         <div>
-          <h2 class="cursor-target inline-block text-4xl font-bold uppercase tracking-wider text-brand lg:text-6xl">
+          <h2
+            class="cursor-target inline-block text-3xl font-bold uppercase tracking-wider text-brand sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
+          >
             Sobre Mí
           </h2>
         </div>
-        
+
         <!-- 
           Subtítulo / Rol
           - cursor-target: Activa el cursor.
         -->
         <div>
-          <h3 class="cursor-target inline-block text-xl font-medium text-gray-300 lg:text-2xl">
+          <h3
+            class="cursor-target inline-block text-lg font-medium text-gray-300 sm:text-xl md:text-2xl lg:text-3xl"
+          >
             Desarrollador Full Stack & Entusiasta de Linux
           </h3>
         </div>
@@ -172,46 +178,63 @@ const contentElement = computed(() => contentRef.value);
           - leading-relaxed: Mejora la legibilidad.
         -->
         <div>
-          <p class="cursor-target inline-block text-lg leading-relaxed text-gray-400 lg:text-xl">
-            Me especializo en construir experiencias web inmersivas y aplicaciones robustas. 
-            Me apasiona el código limpio, el diseño minimalista y la estética cyberpunk.
-            Siempre buscando nuevos desafíos y tecnologías para explorar.
+          <p
+            class="cursor-target inline-block text-base leading-relaxed text-gray-400 sm:text-lg md:text-xl lg:text-2xl"
+          >
+            Me especializo en construir experiencias web inmersivas y
+            aplicaciones robustas. Me apasiona el código limpio, el diseño
+            minimalista y la estética cyberpunk. Siempre buscando nuevos
+            desafíos y tecnologías para explorar.
           </p>
         </div>
-        
+
         <!-- 
           Botón de Acción: Descargar CV
           - cursor-target: Activa el cursor.
         -->
-        <div class="mt-4 flex flex-col items-center gap-6 lg:items-start">
-            <button 
-                class="cursor-target rounded-full border border-brand bg-brand/10 px-8 py-3 text-lg font-bold uppercase tracking-wider text-brand transition-all hover:bg-brand hover:text-black"
-            >
-                Descargar CV
-            </button>
+        <div class="mt-8 flex flex-col gap-8 lg:flex-row lg:items-center">
+          <button
+            class="cursor-target rounded-full border border-brand bg-brand/10 px-8 py-3 text-lg font-bold uppercase tracking-wider text-brand transition-all hover:bg-brand hover:text-black"
+          >
+            Descargar CV
+          </button>
 
-            <!-- Iconos Sociales -->
-            <div class="flex gap-6 mt-2">
-                <a href="#" class="cursor-target inline-block text-gray-400 hover:text-brand transition-colors transform hover:scale-110">
-                    <Instagram :size="32" />
-                </a>
-                <a href="#" class="cursor-target inline-block text-gray-400 hover:text-brand transition-colors transform hover:scale-110">
-                    <MessageCircle :size="32" /> <!-- WhatsApp representation -->
-                </a>
-                <a href="#" class="cursor-target inline-block text-gray-400 hover:text-brand transition-colors transform hover:scale-110">
-                    <Github :size="32" />
-                </a>
-                <a href="#" class="cursor-target inline-block text-gray-400 hover:text-brand transition-colors transform hover:scale-110">
-                    <Linkedin :size="32" />
-                </a>
-            </div>
+          <!-- Iconos Sociales -->
+          <div class="flex gap-8">
+            <a
+              href="#"
+              class="cursor-target inline-block text-gray-400 hover:text-brand transition-colors transform hover:scale-110"
+            >
+              <Instagram :size="32" />
+            </a>
+            <a
+              href="https://api.whatsapp.com/send?phone=51922500091" target="_blank"
+              class="cursor-target inline-block text-gray-400 hover:text-brand transition-colors transform hover:scale-110"
+            >
+              <MessageCircle :size="32" />
+              <!-- WhatsApp representation -->
+            </a>
+            <a
+              href="https://github.com/junkdog505" target="_blank"
+              class="cursor-target inline-block text-gray-400 hover:text-brand transition-colors transform hover:scale-110"
+            >
+              <Github :size="32" />
+            </a>
+            <a
+              href="https://www.linkedin.com/in/edison-cristian-amezquita-soto/" target="_blank"
+              class="cursor-target inline-block text-gray-400 hover:text-brand transition-colors transform hover:scale-110"
+            >
+              <Linkedin :size="32" />
+            </a>
+          </div>
         </div>
       </div>
-
     </div>
+  </div>
 
-    <!-- Sección de Proyectos -->
-    <div class="mx-auto max-w-7xl px-8 pb-24">
+  <!-- Sección de Proyectos -->
+  <div class="w-full bg-neutral-900 p-8 text-brand">
+    <div class="mx-auto max-w-[90rem] px-6 py-12 lg:py-24">
       <ProjectsSection />
     </div>
   </div>

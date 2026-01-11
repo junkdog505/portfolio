@@ -42,17 +42,15 @@ let cleanupAnimation: () => void = () => {};
 const setupAnimation = () => {
   if (!cursorRef.value) return;
 
-  // Capturamos el contenedor actual para esta instancia de la animación.
-  // Esto evita problemas si props.containerRef cambia antes de que se ejecute el cleanup.
-  const currentContainer = props.containerRef;
-  const rootElement = currentContainer || window;
-  const targetElement = currentContainer || document.body;
+  // Si hay containerRef, usamos ese, si no, usamos window
+  const rootElement = props.containerRef || window;
+  const targetElement = props.containerRef || document.body;
 
   const originalCursor = targetElement.style.cursor;
   
   // Solo ocultamos el cursor si NO hay containerRef o si estamos dentro del container
   // Si hay containerRef, manejaremos la visibilidad en el evento mouseenter/mouseleave del container
-  if (!currentContainer && props.hideDefaultCursor) {
+  if (!props.containerRef && props.hideDefaultCursor) {
       document.body.style.cursor = 'none';
   }
 
@@ -81,8 +79,8 @@ const setupAnimation = () => {
     yPercent: -50,
     x: window.innerWidth / 2,
     y: window.innerHeight / 2,
-    opacity: currentContainer ? 0 : 1, // Si hay container, empieza invisible
-    display: currentContainer ? 'none' : 'block'
+    opacity: props.containerRef ? 0 : 1, // Si hay container, empieza invisible
+    display: props.containerRef ? 'none' : 'block'
   });
 
   const createSpinTimeline = () => {
@@ -110,8 +108,8 @@ const setupAnimation = () => {
 
   // Manejo de entrada/salida del contenedor si existe
   const containerEnter = () => {
-      if (props.hideDefaultCursor && currentContainer) {
-          currentContainer.style.cursor = 'none';
+      if (props.hideDefaultCursor && props.containerRef) {
+          props.containerRef.style.cursor = 'none';
       }
       if (cursorRef.value) {
           gsap.to(cursorRef.value, { opacity: 1, display: 'block', duration: 0.2 });
@@ -119,30 +117,30 @@ const setupAnimation = () => {
   };
 
   const containerLeave = () => {
-      if (props.hideDefaultCursor && currentContainer) {
-          currentContainer.style.cursor = 'auto'; // O el que fuera
+      if (props.hideDefaultCursor && props.containerRef) {
+          props.containerRef.style.cursor = 'auto'; // O el que fuera
       }
       if (cursorRef.value) {
            gsap.to(cursorRef.value, { opacity: 0, display: 'none', duration: 0.2 });
       }
   };
 
-  if (currentContainer) {
-      currentContainer.addEventListener('mouseenter', containerEnter);
-      currentContainer.addEventListener('mouseleave', containerLeave);
+  if (props.containerRef) {
+      props.containerRef.addEventListener('mouseenter', containerEnter);
+      props.containerRef.addEventListener('mouseleave', containerLeave);
   }
 
 
   const enterHandler = (e: MouseEvent) => {
     // Si estamos restringidos a un contenedor, ignoramos eventos fuera de él (aunque mouseover burbujea)
-    if (currentContainer && !currentContainer.contains(e.target as Node)) return;
+    if (props.containerRef && !props.containerRef.contains(e.target as Node)) return;
 
     const directTarget = e.target as Element;
 
     const allTargets: Element[] = [];
     let current = directTarget;
     // Buscamos hacia arriba hasta encontrar el body O el containerRef
-    const limit = currentContainer || document.body;
+    const limit = props.containerRef || document.body;
     
     while (current && current !== limit && current !== document.body) {
       if (current.matches(props.targetSelector)) {
@@ -337,9 +335,9 @@ const setupAnimation = () => {
     rootElement.removeEventListener('mousemove', moveHandler as EventListener);
     rootElement.removeEventListener('mouseover', enterHandler as EventListener);
     
-    if (currentContainer) {
-        currentContainer.removeEventListener('mouseenter', containerEnter);
-        currentContainer.removeEventListener('mouseleave', containerLeave);
+    if (props.containerRef) {
+        props.containerRef.removeEventListener('mouseenter', containerEnter);
+        props.containerRef.removeEventListener('mouseleave', containerLeave);
     }
 
     if (activeTarget) {
@@ -371,11 +369,10 @@ const setupAnimation = () => {
       });
     }
 
-    // Usamos currentContainer para decidir qué cursor restaurar, no props.containerRef
-    if (!currentContainer && props.hideDefaultCursor) {
+    if (!props.containerRef && props.hideDefaultCursor) {
         document.body.style.cursor = originalCursor;
-    } else if (currentContainer && props.hideDefaultCursor) {
-        currentContainer.style.cursor = originalCursor;
+    } else if (props.containerRef && props.hideDefaultCursor) {
+        props.containerRef.style.cursor = originalCursor;
     }
     
     activeTarget = null;

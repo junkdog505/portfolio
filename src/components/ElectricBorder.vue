@@ -8,13 +8,15 @@ type ElectricBorderProps = {
   thickness?: number;
   className?: string;
   style?: CSSProperties;
+  trigger?: 'always' | 'hover';
 };
 
 const props = withDefaults(defineProps<ElectricBorderProps>(), {
   color: '#28FF85',
   speed: 1,
   chaos: 1,
-  thickness: 2
+  thickness: 2,
+  trigger: 'always'
 });
 
 function hexToRgba(hex: string, alpha = 1): string {
@@ -150,19 +152,10 @@ const glow2Style = computed<CSSProperties>(() => ({
   filter: `blur(${2 + props.thickness * 0.5}px)`,
   opacity: 0.5
 }));
-
-const bgGlowStyle = computed<CSSProperties>(() => ({
-  ...inheritRadius.value,
-  transform: 'scale(1.08)',
-  filter: 'blur(32px)',
-  opacity: 0.3,
-  zIndex: -1,
-  background: `linear-gradient(-30deg, ${hexToRgba(props.color, 0.8)}, transparent, ${props.color})`
-}));
 </script>
 
 <template>
-  <div ref="rootRef" :class="['relative isolate', className]" :style="style">
+  <div ref="rootRef" :class="['relative isolate group', className]" :style="style">
     <svg
       ref="svgRef"
       class="fixed opacity-0 w-0 h-0 pointer-events-none"
@@ -208,15 +201,18 @@ const bgGlowStyle = computed<CSSProperties>(() => ({
       </defs>
     </svg>
 
-    <div class="absolute inset-0 pointer-events-none" :style="inheritRadius">
+    <div class="relative" :style="inheritRadius">
+      <slot />
+    </div>
+
+    <div 
+      class="absolute inset-0 pointer-events-none transition-opacity duration-300 z-10" 
+      :class="{ 'opacity-0 group-hover:opacity-100': trigger === 'hover' }"
+      :style="inheritRadius"
+    >
       <div ref="strokeRef" class="box-border absolute inset-0" :style="strokeStyle" />
       <div class="box-border absolute inset-0" :style="glow1Style" />
       <div class="box-border absolute inset-0" :style="glow2Style" />
-      <div class="absolute inset-0" :style="bgGlowStyle" />
-    </div>
-
-    <div class="relative" :style="inheritRadius">
-      <slot />
     </div>
   </div>
 </template>
