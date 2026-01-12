@@ -181,7 +181,7 @@ const contentElement = computed(() => contentRef.value);
           icon-url="/linux-tux.svg"
           :show-user-info="true"
           :show-behind-gradient="false"
-          :enable-tilt="true"
+          :enable-tilt="!isMobile"
           @contact-click="handleContactClick"
         />
       </div>

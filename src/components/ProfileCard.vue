@@ -79,9 +79,9 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  avatarUrl: '<Placeholder for avatar URL>',
-  iconUrl: '<Placeholder for icon URL>',
-  grainUrl: '<Placeholder for grain URL>',
+  avatarUrl: '',
+  iconUrl: '',
+  grainUrl: '',
   behindGradient: undefined,
   innerGradient: undefined,
   showBehindGradient: true,
@@ -727,9 +727,63 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+  /* Performance Optimizations for Mobile */
+  .pc-card-wrapper {
+    perspective: none;
+    transform: none;
+  }
+
+  .pc-card-wrapper::before {
+    /* Simplify outer glow: remove expensive contrast/saturate and reduce blur */
+    filter: blur(20px);
+    transition: none;
+    opacity: 0.6;
+  }
+
   .pc-card {
     height: 70svh;
     max-height: 450px;
+    /* Disable 3D transforms */
+    transform: none !important;
+    transition: none;
+  }
+
+  /* Disable expensive holographic blend modes */
+  .pc-shine, .pc-glare {
+    opacity: 0.3; /* Reduce visibility of complex layers */
+    animation: none; /* Stop continuous repaints */
+    filter: none; /* Remove filters */
+  }
+  
+  /* Simplify shine internals */
+  .pc-shine::before, .pc-shine::after {
+    filter: none;
+    mix-blend-mode: normal;
+    background-blend-mode: normal;
+  }
+
+  /* Remove backdrop-filter (GPU killer on mobile) */
+  .pc-avatar-content::before {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    /* Use gradient to simulate depth without blur */
+    background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.8) 100%);
+  }
+
+  .pc-user-info {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(20, 20, 25, 0.95); /* Solid fallback */
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    padding: 10px 12px;
+  }
+
+  .pc-contact-btn {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .pc-details {
