@@ -350,7 +350,23 @@ const setup = () => {
   resizeObserver.observe(ctn);
   resize();
 
+  let isVisible = true;
+  const intersectionObserver = new IntersectionObserver((entries) => {
+    if (entries[0]) {
+      isVisible = entries[0].isIntersecting;
+      if (isVisible && rafRef.value === 0) {
+        rafRef.value = requestAnimationFrame(update);
+      }
+    }
+  });
+  intersectionObserver.observe(ctn);
+
   const update = (t: number) => {
+    if (!isVisible) {
+      rafRef.value = 0;
+      return;
+    }
+
     rafRef.value = requestAnimationFrame(update);
 
     if (props.pageLoadAnimation && loadAnimationStartRef.value === 0) {
@@ -394,6 +410,7 @@ const setup = () => {
   cleanup = () => {
     cancelAnimationFrame(rafRef.value);
     resizeObserver.disconnect();
+    intersectionObserver.disconnect();
     if (props.mouseReact) ctn.removeEventListener('mousemove', handleMouseMove);
     if (gl.canvas.parentElement === ctn) ctn.removeChild(gl.canvas);
     gl.getExtension('WEBGL_lose_context')?.loseContext();

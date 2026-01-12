@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, useTemplateRef, watch, type CSSProperties } from 'vue';
+import { computed, onBeforeUnmount, onMounted, useTemplateRef, ref ,watch, type CSSProperties } from 'vue';
 
 type ElectricBorderProps = {
   color?: string;
@@ -42,11 +42,27 @@ const filterId = `turbulent-displace-${rawId}`;
 const svgRef = useTemplateRef('svgRef');
 const rootRef = useTemplateRef('rootRef');
 const strokeRef = useTemplateRef('strokeRef');
+const isMobile = ref(false);
+
+const checkMobile = () => {
+  isMobile.value = window.matchMedia('(max-width: 768px)').matches;
+};
+
+watch(isMobile, () => {
+  updateAnim();
+});
 
 const updateAnim = () => {
   const svg = svgRef.value;
   const host = rootRef.value;
   if (!svg || !host) return;
+
+  if (isMobile.value) {
+    if (strokeRef.value) {
+      strokeRef.value.style.filter = 'none';
+    }
+    return;
+  }
 
   if (strokeRef.value) {
     strokeRef.value.style.filter = `url(#${filterId})`;
@@ -105,12 +121,15 @@ let ro: ResizeObserver | null = null;
 
 onMounted(() => {
   if (!rootRef.value) return;
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
   ro = new ResizeObserver(() => updateAnim());
   ro.observe(rootRef.value);
   updateAnim();
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', checkMobile);
   if (ro) ro.disconnect();
 });
 
@@ -211,8 +230,22 @@ const glow2Style = computed<CSSProperties>(() => ({
       :style="inheritRadius"
     >
       <div ref="strokeRef" class="box-border absolute inset-0" :style="strokeStyle" />
-      <div class="box-border absolute inset-0" :style="glow1Style" />
-      <div class="box-border absolute inset-0" :style="glow2Style" />
+      <div class="box-border absolute inset-0" :class="{ 'mobile-pulse': isMobile }" :style="glow1Style" />
+      <div class="box-border absolute inset-0" :class="{ 'mobile-pulse-delayed': isMobile }" :style="glow2Style" />
     </div>
   </div>
 </template>
+
+<style scoped>
+.mobile-pulse {
+  animation: electric-pulse 2s infinite ease-in-out;
+}
+.mobile-pulse-delayed {
+  animation: electric-pulse 2s infinite ease-in-out;
+  animation-delay: 1s;
+}
+@keyframes electric-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+</style>
