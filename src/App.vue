@@ -2,7 +2,7 @@
 /**
  * Importaciones necesarias de Vue y componentes.
  */
-import { useTemplateRef, computed } from "vue";
+import { useTemplateRef, computed, ref, onMounted, onBeforeUnmount } from "vue";
 import FaultyTerminal from "./components/FaultyTerminal.vue";
 import ProfileCard from "./components/ProfileCard.vue";
 import TargetCursor from "./components/TargetCursor.vue";
@@ -12,6 +12,72 @@ import { Instagram, Github, Linkedin, MessageCircle } from "lucide-vue-next";
 const handleContactClick = () => {
   console.log("Contact button clicked!");
 };
+
+const isMobile = ref(false);
+const aspectRatio = ref(1);
+
+const checkMobile = () => {
+  isMobile.value = window.matchMedia('(max-width: 768px)').matches;
+  aspectRatio.value = window.innerWidth / window.innerHeight;
+};
+
+onMounted(() => {
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', checkMobile);
+});
+
+const terminalProps = computed(() => {
+  if (isMobile.value) {
+    // Calculate grid multipliers for square cells on mobile
+    // We want gridMul.x / gridMul.y ~= aspect
+    // Keeping Y=1, X should be aspect ratio.
+    const densityY = 1.0;
+    const densityX = densityY * aspectRatio.value;
+    
+    return {
+      scale: 0.5, // Reduced scale for larger elements (zoomed in)
+      gridMul: [densityX, densityY] as [number, number],
+      digitSize: 1.2,
+      timeScale: 1.5,
+      pause: false,
+      scanlineIntensity: 0.1,
+      glitchAmount: 0,
+      flickerAmount: 1,
+      noiseAmp: 1,
+      chromaticAberration: 0,
+      dither: 0,
+      curvature: 0,
+      tint: "#619b59",
+      mouseReact: true,
+      mouseStrength: 0.2,
+      pageLoadAnimation: false,
+      brightness: 0.4
+    };
+  }
+  return {
+    scale: 1.8,
+    gridMul: [2, 1] as [number, number],
+    digitSize: 1.2,
+    timeScale: 1.5,
+    pause: false,
+    scanlineIntensity: 0.6,
+    glitchAmount: 1,
+    flickerAmount: 1,
+    noiseAmp: 1,
+    chromaticAberration: 0.3,
+    dither: 0,
+    curvature: 0,
+    tint: "#619b59",
+    mouseReact: true,
+    mouseStrength: 0.3,
+    pageLoadAnimation: false,
+    brightness: 0.5
+  };
+});
 
 // Referencia para el contenedor de la sección de contenido
 const contentRef = useTemplateRef<HTMLDivElement>("contentRef");
@@ -33,25 +99,7 @@ const contentElement = computed(() => contentRef.value);
       z-0 asegura que quede detrás del contenido.
     -->
     <div class="absolute inset-0 z-0">
-      <FaultyTerminal
-        :scale="1.8"
-        :grid-mul="[2, 1]"
-        :digit-size="1.2"
-        :time-scale="1.5"
-        :pause="false"
-        :scanline-intensity="0.6"
-        :glitch-amount="1"
-        :flicker-amount="1"
-        :noise-amp="1"
-        :chromatic-aberration="0.3"
-        :dither="0"
-        :curvature="0.2"
-        tint="#619b59"
-        :mouse-react="true"
-        :mouse-strength="0.3"
-        :page-load-animation="false"
-        :brightness="0.5"
-      />
+      <FaultyTerminal v-bind="terminalProps" />
     </div>
 
     <!-- 

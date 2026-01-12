@@ -277,6 +277,9 @@ const rafRef = ref<number>(0);
 const loadAnimationStartRef = ref<number>(0);
 const timeOffsetRef = ref<number>(Math.random() * 100);
 const isMobile = ref(false);
+const lowPowerMode = ref(false);
+const frameTimes: number[] = [];
+let lastFrameTime = 0;
 
 const tintVec = computed(() => hexToRgb(props.tint));
 
@@ -321,18 +324,18 @@ const setup = () => {
       uGridMul: { value: new Float32Array(props.gridMul) },
       uDigitSize: { value: props.digitSize },
       uScanlineIntensity: { value: props.scanlineIntensity },
-      uGlitchAmount: { value: isMobile.value ? 1 : props.glitchAmount },
+      uGlitchAmount: { value: props.glitchAmount },
       uFlickerAmount: { value: props.flickerAmount },
-      uNoiseAmp: { value: isMobile.value ? 0.5 : props.noiseAmp },
-      uChromaticAberration: { value: isMobile.value ? 0 : props.chromaticAberration },
-      uDither: { value: isMobile.value ? 0 : ditherValue },
-      uCurvature: { value: isMobile.value ? 0 : props.curvature },
+      uNoiseAmp: { value: props.noiseAmp },
+      uChromaticAberration: { value: props.chromaticAberration },
+      uDither: { value: ditherValue.value },
+      uCurvature: { value: props.curvature },
       uTint: { value: new Color(tintVec.value[0], tintVec.value[1], tintVec.value[2]) },
       uMouse: {
         value: new Float32Array([smoothMouseRef.value.x, smoothMouseRef.value.y])
       },
-      uMouseStrength: { value: isMobile.value ? 0 : props.mouseStrength },
-      uUseMouse: { value: (props.mouseReact && !isMobile.value) ? 1 : 0 },
+      uMouseStrength: { value: props.mouseStrength },
+      uUseMouse: { value: props.mouseReact ? 1 : 0 },
       uPageLoadProgress: { value: props.pageLoadAnimation ? 0 : 1 },
       uUsePageLoadAnimation: { value: props.pageLoadAnimation ? 1 : 0 },
       uBrightness: { value: props.brightness }
@@ -345,11 +348,15 @@ const setup = () => {
   function resize() {
     if (!ctn || !renderer) return;
     renderer.setSize(ctn.offsetWidth, ctn.offsetHeight);
+    const aspect = gl.canvas.width / gl.canvas.height;
     program.uniforms.iResolution.value = new Color(
       gl.canvas.width,
       gl.canvas.height,
-      gl.canvas.width / gl.canvas.height
+      aspect
     );
+
+    program.uniforms.uScale.value = props.scale;
+    program.uniforms.uGridMul.value = new Float32Array(props.gridMul);
   }
 
   const resizeObserver = new ResizeObserver(() => resize());
@@ -376,9 +383,30 @@ const setup = () => {
 
     rafRef.value = requestAnimationFrame(update);
 
+    // Adaptive FPS Logic for Mobile
     if (isMobile.value) {
-      frameCount++;
-      if (frameCount % 2 !== 0) return; // Cap at 30fps on mobile
+      if (!lowPowerMode.value) {
+        if (lastFrameTime !== 0) {
+          const delta = t - lastFrameTime;
+          frameTimes.push(delta);
+          if (frameTimes.length > 60) frameTimes.shift();
+
+          // Check performance after collecting enough samples (e.g. 1 second)
+          if (frameTimes.length >= 60) {
+             const avgDelta = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+             // If average frame time > 22ms (~45fps), switch to low power mode (30fps)
+             if (avgDelta > 22) {
+               lowPowerMode.value = true;
+               console.log("FaultyTerminal: Low power mode enabled (30fps limit)");
+             }
+          }
+        }
+        lastFrameTime = t;
+      } else {
+        // Enforce 30fps cap
+        frameCount++;
+        if (frameCount % 2 !== 0) return;
+      }
     }
 
     if (props.pageLoadAnimation && loadAnimationStartRef.value === 0) {
