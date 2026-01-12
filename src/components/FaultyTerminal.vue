@@ -276,10 +276,15 @@ const frozenTimeRef = ref(0);
 const rafRef = ref<number>(0);
 const loadAnimationStartRef = ref<number>(0);
 const timeOffsetRef = ref<number>(Math.random() * 100);
+const isMobile = ref(false);
 
 const tintVec = computed(() => hexToRgb(props.tint));
 
 const ditherValue = computed(() => (typeof props.dither === 'boolean' ? (props.dither ? 1 : 0) : props.dither));
+
+const checkMobile = () => {
+  isMobile.value = window.matchMedia('(max-width: 768px)').matches;
+};
 
 const handleMouseMove = (e: MouseEvent) => {
   const ctn = containerRef.value;
@@ -295,7 +300,8 @@ const setup = () => {
   const ctn = containerRef.value;
   if (!ctn) return;
 
-  const renderer = new Renderer({ dpr: props.dpr });
+  const effectiveDpr = isMobile.value ? 1 : props.dpr;
+  const renderer = new Renderer({ dpr: effectiveDpr });
   rendererRef.value = renderer;
   const gl = renderer.gl;
   gl.clearColor(0, 0, 0, 1);
@@ -315,18 +321,18 @@ const setup = () => {
       uGridMul: { value: new Float32Array(props.gridMul) },
       uDigitSize: { value: props.digitSize },
       uScanlineIntensity: { value: props.scanlineIntensity },
-      uGlitchAmount: { value: props.glitchAmount },
+      uGlitchAmount: { value: isMobile.value ? 1 : props.glitchAmount },
       uFlickerAmount: { value: props.flickerAmount },
-      uNoiseAmp: { value: props.noiseAmp },
-      uChromaticAberration: { value: props.chromaticAberration },
-      uDither: { value: ditherValue },
-      uCurvature: { value: props.curvature },
+      uNoiseAmp: { value: isMobile.value ? 0.5 : props.noiseAmp },
+      uChromaticAberration: { value: isMobile.value ? 0 : props.chromaticAberration },
+      uDither: { value: isMobile.value ? 0 : ditherValue },
+      uCurvature: { value: isMobile.value ? 0 : props.curvature },
       uTint: { value: new Color(tintVec.value[0], tintVec.value[1], tintVec.value[2]) },
       uMouse: {
         value: new Float32Array([smoothMouseRef.value.x, smoothMouseRef.value.y])
       },
-      uMouseStrength: { value: props.mouseStrength },
-      uUseMouse: { value: props.mouseReact ? 1 : 0 },
+      uMouseStrength: { value: isMobile.value ? 0 : props.mouseStrength },
+      uUseMouse: { value: (props.mouseReact && !isMobile.value) ? 1 : 0 },
       uPageLoadProgress: { value: props.pageLoadAnimation ? 0 : 1 },
       uUsePageLoadAnimation: { value: props.pageLoadAnimation ? 1 : 0 },
       uBrightness: { value: props.brightness }
@@ -361,6 +367,7 @@ const setup = () => {
   });
   intersectionObserver.observe(ctn);
 
+  let frameCount = 0;
   const update = (t: number) => {
     if (!isVisible) {
       rafRef.value = 0;
@@ -368,6 +375,11 @@ const setup = () => {
     }
 
     rafRef.value = requestAnimationFrame(update);
+
+    if (isMobile.value) {
+      frameCount++;
+      if (frameCount % 2 !== 0) return; // Cap at 30fps on mobile
+    }
 
     if (props.pageLoadAnimation && loadAnimationStartRef.value === 0) {
       loadAnimationStartRef.value = t;
@@ -422,6 +434,7 @@ const setup = () => {
 onMounted(() => {
   const ctn = containerRef.value;
   if (ctn) {
+    checkMobile();
     setup();
   }
 });
