@@ -39,7 +39,7 @@ const terminalProps = computed(() => {
     const densityX = densityY * aspectRatio.value;
     
     return {
-      scale: 0.5, // Reduced scale for larger elements (zoomed in)
+      scale: 1.8, // Reduced scale for larger elements (zoomed in)
       gridMul: [densityX, densityY] as [number, number],
       digitSize: 1.2,
       timeScale: 1.5,
