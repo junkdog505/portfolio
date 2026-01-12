@@ -148,7 +148,7 @@ const contentElement = computed(() => contentRef.value);
                              evitando que tome el body por defecto y oculte el cursor globalmente.
     -->
     <TargetCursor
-      v-if="contentElement"
+      v-if="contentElement && !isMobile"
       :spin-duration="2"
       :hide-default-cursor="true"
       :container-ref="contentElement"

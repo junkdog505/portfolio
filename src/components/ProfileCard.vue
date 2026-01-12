@@ -544,7 +544,7 @@ onUnmounted(() => {
 }
 
 .pc-avatar-content {
-  mix-blend-mode: screen;
+  mix-blend-mode: normal;
   overflow: hidden;
 }
 
